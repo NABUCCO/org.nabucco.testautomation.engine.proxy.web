@@ -22,12 +22,11 @@ import org.nabucco.testautomation.engine.proxy.web.WebActionType;
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponent;
 import org.nabucco.testautomation.engine.proxy.web.component.WebComponentCommand;
 import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentException;
-
 import org.nabucco.testautomation.facade.datatype.property.PropertyList;
-import org.nabucco.testautomation.facade.datatype.property.base.PropertyType;
 import org.nabucco.testautomation.result.facade.datatype.ActionResponse;
 import org.nabucco.testautomation.result.facade.datatype.status.ActionStatusType;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
+
 import com.thoughtworks.selenium.Selenium;
 
 /**
@@ -78,19 +77,23 @@ public class WebDocumentImpl extends AbstractWebComponent {
 			result.setActionStatus(ActionStatusType.EXECUTED);
 			return result;
         } catch (WebComponentException ex) {
-        	String errorMessage = "Could not execute WebDocument-command. Cause: " + ex.getMessage();
+        	String errorMessage = "Could not execute " + actionType
+			+ " on WebDocument '" + metadata.getName().getValue()
+			+ "'. Cause: " + ex.getMessage();
             this.error(errorMessage);
 			result.setErrorMessage(errorMessage);
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } catch (Exception ex) {
         	this.fatal(ex);
-            result.setErrorMessage("Could not execute WebDocument-command. Cause: " + ex.toString());
+            result.setErrorMessage("Could not execute " + actionType
+					+ " on WebDocument '" + metadata.getName().getValue()
+					+ "'. Cause: " + ex.toString());
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } finally {
         	
-        	if (context.isTracingEnabled() && command != null) {
+        	if (command != null) {
         		result.setActionTrace(command.getActionTrace());
         	}
         }
@@ -99,14 +102,6 @@ public class WebDocumentImpl extends AbstractWebComponent {
     @Override
 	protected void validateProperties(PropertyList propertyList, WebActionType actionType) {
 		
-		switch (actionType) {
-		case READ:
-			if (propertyList.getPropertyList().size() < 1
-					|| propertyList.getPropertyList().get(0).getProperty().getType() != PropertyType.STRING) {
-				throw new IllegalArgumentException("Read requires 1 Property of Type String");
-			}
-			break;
-		}
 	}
 
 }

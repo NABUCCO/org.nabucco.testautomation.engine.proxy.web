@@ -93,6 +93,11 @@ public abstract class AbstractWebComponentCommand extends AbstractProxyCommand i
 	protected void error(String msg) {
 		logger.error(msg);
 	}
+
+	@Override
+	protected void warning(String msg) {
+		logger.warning(msg);
+	}
 	
 	/**
      * Returns the selenium selector (see
@@ -170,18 +175,87 @@ public abstract class AbstractWebComponentCommand extends AbstractProxyCommand i
      * 
      * @param componentIdentifier
      */
-    protected void waitForElement(String locator) {
+    protected boolean waitForElement(String locator) {
     	
 		long timeoutBarrier = System.currentTimeMillis() + Long.parseLong(this.getTimeout());
-
-		while (!this.getSelenium().isElementPresent(locator)
+		boolean isElementPresent = false;
+		
+		while (!(isElementPresent = this.getSelenium().isElementPresent(locator))
 				&& System.currentTimeMillis() < timeoutBarrier) {
 			try {
 				Thread.sleep(1000L);
 			} catch (InterruptedException ex) {
 			}
 		}
+		return isElementPresent;
     }
+    
+    /**
+     * Checks, if a waiting timeout is configured in the given PropertyList.
+     * 
+	 * @param propertyList the PropertyList to check
+	 */
+	protected void checkTimeout(PropertyList propertyList) {
+
+		Property timeoutProperty = PropertyHelper.getFromList(propertyList, TIMEOUT);
+		
+		if (timeoutProperty != null) {
+			
+			switch (timeoutProperty.getType()) {
+			case INTEGER:
+				this.timeout = ((IntegerProperty) timeoutProperty).getValue().getValue().toString();
+				break;
+			case LONG:
+				this.timeout = ((LongProperty) timeoutProperty).getValue().toString();
+				break;
+			case STRING:
+				this.timeout = ((StringProperty) timeoutProperty).getValue().getValue();
+				break;
+			}
+		}
+	}
+	
+	/**
+     * Checks, if a waiting timeout is configured for the given metadata.
+     * 
+	 * @param metadata the Metadata to check
+	 */
+	protected void checkTimeout(Metadata metadata) {
+
+		Property timeoutProperty = PropertyHelper.getFromList(metadata.getPropertyList(), TIMEOUT);
+		
+		if (timeoutProperty != null) {
+			
+			switch (timeoutProperty.getType()) {
+			case INTEGER:
+				this.timeout = ((IntegerProperty) timeoutProperty).getValue().getValue().toString();
+				break;
+			case LONG:
+				this.timeout = ((LongProperty) timeoutProperty).getValue().toString();
+				break;
+			case STRING:
+				this.timeout = ((StringProperty) timeoutProperty).getValue().getValue();
+				break;
+			}
+		}
+	}
+	
+    /**
+     * Checks, if the given Metadata requires an Ajax-call.
+     * 
+	 * @param metadata the Metadata to check
+	 */
+	protected void checkAjax(Metadata metadata) {
+
+		BooleanProperty ajaxProperty = (BooleanProperty) PropertyHelper
+				.getFromList(metadata.getPropertyList(), PropertyType.BOOLEAN, AJAX);
+
+		if (ajaxProperty != null && ajaxProperty.getValue() != null
+				&& ajaxProperty.getValue().getValue() != null) {
+			this.ajax = ajaxProperty.getValue().getValue();
+		}
+	}
+
     
     /**
      * 
@@ -216,45 +290,4 @@ public abstract class AbstractWebComponentCommand extends AbstractProxyCommand i
     	return this.timeout;
     }
     
-    /**
-     * Checks, if the given Metadata requires an Ajax-call.
-     * 
-	 * @param metadata the Metadata to check
-	 */
-	private void checkAjax(Metadata metadata) {
-
-		BooleanProperty ajaxProperty = (BooleanProperty) PropertyHelper
-				.getFromList(metadata.getPropertyList(), PropertyType.BOOLEAN, AJAX);
-
-		if (ajaxProperty != null && ajaxProperty.getValue() != null
-				&& ajaxProperty.getValue().getValue() != null) {
-			this.ajax = ajaxProperty.getValue().getValue();
-		}
-	}
-	
-	/**
-     * Checks, if a waiting timeout is configured for the given metadata.
-     * 
-	 * @param metadata the Metadata to check
-	 */
-	private void checkTimeout(Metadata metadata) {
-
-		Property timeoutProperty = PropertyHelper.getFromList(metadata.getPropertyList(), TIMEOUT);
-		
-		if (timeoutProperty != null) {
-			
-			switch (timeoutProperty.getType()) {
-			case INTEGER:
-				this.timeout = ((IntegerProperty) timeoutProperty).getValue().getValue().toString();
-				break;
-			case LONG:
-				this.timeout = ((LongProperty) timeoutProperty).getValue().toString();
-				break;
-			case STRING:
-				this.timeout = ((StringProperty) timeoutProperty).getValue().getValue();
-				break;
-			}
-		}
-	}
-
 }

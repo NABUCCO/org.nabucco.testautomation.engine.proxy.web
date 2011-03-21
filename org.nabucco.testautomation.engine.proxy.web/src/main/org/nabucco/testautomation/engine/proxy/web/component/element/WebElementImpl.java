@@ -17,6 +17,7 @@
 package org.nabucco.testautomation.engine.proxy.web.component.element;
 
 import org.nabucco.testautomation.engine.base.context.TestContext;
+import org.nabucco.testautomation.engine.base.util.PropertyHelper;
 import org.nabucco.testautomation.engine.base.util.TestResultHelper;
 import org.nabucco.testautomation.engine.proxy.web.WebActionType;
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponent;
@@ -79,6 +80,10 @@ public class WebElementImpl extends AbstractWebComponent {
 	        	command = new PressKeyCommand(this.getSelenium());
 	            break;
 	            
+	        case IS_AVAILABLE:
+	        	command = new GetAvailabilityCommand(this.getSelenium());
+	        	break;
+	            
 	        default:
 	            return failResult(metadata, actionType, "Unsupported WebActionType for WebElement: '" + actionType + "'");
 	        }
@@ -91,14 +96,18 @@ public class WebElementImpl extends AbstractWebComponent {
 			result.setActionStatus(ActionStatusType.EXECUTED);
 			return result;
         } catch (WebComponentException ex) {
-        	String errorMessage = "Could not execute WebElement-command. Cause: " + ex.getMessage();
+        	String errorMessage = "Could not execute " + actionType
+			+ " on WebElement '" + metadata.getName().getValue()
+			+ "'. Cause: " + ex.getMessage();
             this.error(errorMessage);
 			result.setErrorMessage(errorMessage);
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } catch (Exception ex) {
         	this.fatal(ex);
-            result.setErrorMessage("Could not execute WebElement-command. Cause: " + ex.toString());
+            result.setErrorMessage("Could not execute " + actionType
+					+ " on WebElement '" + metadata.getName().getValue()
+					+ "'. Cause: " + ex.toString());
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } finally {
@@ -110,16 +119,28 @@ public class WebElementImpl extends AbstractWebComponent {
     }
 
 	@Override
-	protected void validateProperties(PropertyList propertyList, WebActionType actionType) {
-		
+	protected void validateProperties(PropertyList propertyList,
+			WebActionType actionType) {
+
 		switch (actionType) {
-		
+
 		case READ:
 			if (propertyList.getPropertyList().size() < 1
-					|| propertyList.getPropertyList().get(0).getProperty().getType() != PropertyType.STRING) {
-				throw new IllegalArgumentException("Read requires 1 Property of Type String");
+					|| propertyList.getPropertyList().get(0).getProperty()
+							.getType() != PropertyType.STRING) {
+				throw new IllegalArgumentException(
+						"Read requires 1 Property of Type String");
 			}
 			break;
+
+		case IS_AVAILABLE:
+			if (propertyList == null
+					|| propertyList.getPropertyList().isEmpty()
+					|| PropertyHelper.getFromList(propertyList,
+							PropertyType.BOOLEAN) == null) {
+				throw new IllegalArgumentException(
+						"IsAvailable requires 1 Property of Type Boolean");
+			}
 		}
 	}
 

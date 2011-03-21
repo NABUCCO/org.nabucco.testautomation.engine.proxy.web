@@ -72,14 +72,18 @@ public class WebTableImpl extends AbstractWebComponent {
 			result.setActionStatus(ActionStatusType.EXECUTED);
 			return result;
 		} catch (WebComponentException ex) {
-        	String errorMessage = "Could not execute WebTable-command. Cause: " + ex.getMessage();
+        	String errorMessage = "Could not execute " + actionType
+			+ " on WebTable '" + metadata.getName().getValue()
+			+ "'. Cause: " + ex.getMessage();
             this.error(errorMessage);
 			result.setErrorMessage(errorMessage);
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } catch (Exception ex) {
         	this.fatal(ex);
-            result.setErrorMessage("Could not execute WebTable-command. Cause: " + ex.toString());
+            result.setErrorMessage("Could not execute " + actionType
+					+ " on WebTable '" + metadata.getName().getValue()
+					+ "'. Cause: " + ex.toString());
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } finally {

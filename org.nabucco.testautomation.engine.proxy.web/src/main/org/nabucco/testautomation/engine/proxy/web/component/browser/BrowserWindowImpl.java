@@ -86,14 +86,18 @@ public class BrowserWindowImpl extends AbstractWebComponent {
 			result.setActionStatus(ActionStatusType.EXECUTED);
 			return result;
 		} catch (WebComponentException ex) {
-        	String errorMessage = "Could not execute BrowserWindow-command. Cause: " + ex.getMessage();
+        	String errorMessage = "Could not execute " + actionType
+			+ " on BrowserWindow '" + metadata.getName().getValue()
+			+ "'. Cause: " + ex.getMessage();
             this.error(errorMessage);
 			result.setErrorMessage(errorMessage);
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } catch (Exception ex) {
         	this.fatal(ex);
-            result.setErrorMessage("Could not execute BrowserWindow-command. Cause: " + ex.toString());
+            result.setErrorMessage("Could not execute " + actionType
+					+ " on BrowserWindow '" + metadata.getName().getValue()
+					+ "'. Cause: " + ex.toString());
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } finally {

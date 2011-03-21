@@ -22,11 +22,14 @@ import org.nabucco.testautomation.engine.proxy.web.WebActionType;
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponent;
 import org.nabucco.testautomation.engine.proxy.web.component.WebComponentCommand;
 import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentException;
-
 import org.nabucco.testautomation.facade.datatype.property.PropertyList;
+import org.nabucco.testautomation.facade.datatype.property.base.Property;
+import org.nabucco.testautomation.facade.datatype.property.base.PropertyContainer;
+import org.nabucco.testautomation.facade.datatype.property.base.PropertyType;
 import org.nabucco.testautomation.result.facade.datatype.ActionResponse;
 import org.nabucco.testautomation.result.facade.datatype.status.ActionStatusType;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
+
 import com.thoughtworks.selenium.Selenium;
 
 /**
@@ -80,14 +83,18 @@ public class CookieImpl extends AbstractWebComponent {
 			result.setActionStatus(ActionStatusType.EXECUTED);
 			return result;
 		} catch (WebComponentException ex) {
-        	String errorMessage = "Could not execute Cookie-command. Cause: " + ex.getMessage();
+        	String errorMessage = "Could not execute " + actionType
+			+ " on Cookie '" + metadata.getName().getValue()
+			+ "'. Cause: " + ex.getMessage();
             this.error(errorMessage);
 			result.setErrorMessage(errorMessage);
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } catch (Exception ex) {
         	this.fatal(ex);
-            result.setErrorMessage("Could not execute Cookie-command. Cause: " + ex.toString());
+            result.setErrorMessage("Could not execute " + actionType
+					+ " on Cookie '" + metadata.getName().getValue()
+					+ "'. Cause: " + ex.toString());
             result.setActionStatus(ActionStatusType.FAILED);
             return result;
         } finally {
@@ -102,6 +109,19 @@ public class CookieImpl extends AbstractWebComponent {
 	protected void validateProperties(PropertyList propertyList,
 			WebActionType actionType) {
 
+		switch (actionType) {
+
+		case READ:
+			for (PropertyContainer container : propertyList.getPropertyList()) {
+				Property prop = container.getProperty();
+
+				if (prop != null && prop.getType() == PropertyType.STRING
+						&& !prop.getName().getValue().equals(WebComponentCommand.NAME)) {
+					return;
+				}
+			}
+			throw new IllegalArgumentException("Read requires 1 Property of Type String");
+		}
 	}
 
 }

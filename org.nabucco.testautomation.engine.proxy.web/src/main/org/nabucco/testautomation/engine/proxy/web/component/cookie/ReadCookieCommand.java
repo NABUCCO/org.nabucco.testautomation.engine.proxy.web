@@ -23,6 +23,7 @@ import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentExcepti
 import org.nabucco.testautomation.facade.datatype.property.PropertyList;
 import org.nabucco.testautomation.facade.datatype.property.StringProperty;
 import org.nabucco.testautomation.facade.datatype.property.base.Property;
+import org.nabucco.testautomation.facade.datatype.property.base.PropertyContainer;
 import org.nabucco.testautomation.facade.datatype.property.base.PropertyType;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
 import com.thoughtworks.selenium.Selenium;
@@ -51,7 +52,7 @@ public class ReadCookieCommand extends AbstractWebComponentCommand {
 		String value = this.getSelenium().getCookieByName(name);
 		this.stop();
 		
-		StringProperty property = (StringProperty) properties.getPropertyList().get(0).getProperty().cloneObject();
+		StringProperty property = getValueProperty(properties);
         property.setValue(value);
         PropertyList returnProperties = PropertyHelper.createPropertyList(RETURN_PROPERTIES);
         this.add(property, returnProperties);
@@ -78,6 +79,19 @@ public class ReadCookieCommand extends AbstractWebComponentCommand {
 		}
 		
 		return EMPTY_STRING;
+	}
+	
+	private StringProperty getValueProperty(PropertyList propertyList) {
+		
+		for (PropertyContainer container : propertyList.getPropertyList()) {
+			Property prop = container.getProperty();
+
+			if (prop != null && prop.getType() == PropertyType.STRING
+					&& !prop.getName().getValue().equals(NAME)) {
+				return (StringProperty) prop.cloneObject();
+			}
+		}
+		return null;
 	}
 
 }

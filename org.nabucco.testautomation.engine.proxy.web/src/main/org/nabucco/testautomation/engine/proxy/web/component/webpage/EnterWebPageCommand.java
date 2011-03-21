@@ -17,6 +17,8 @@
 package org.nabucco.testautomation.engine.proxy.web.component.webpage;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponentCommand;
@@ -49,35 +51,36 @@ public class EnterWebPageCommand extends AbstractWebComponentCommand {
 			PropertyList properties) throws WebComponentException {
 		
 		// Evaluate url
-        String url = this.getComponentLocator(metadata);
-        StringBuilder urlToOpen = new StringBuilder();
-        
-        // check if absolute or relative URL
-        if (url.startsWith(SLASH) || url.startsWith(DOT)) {
-            urlToOpen.append(this.getSelenium().getLocation());
-        }
+        String urlToEnter = this.getComponentLocator(metadata);
 
-        urlToOpen.append(url);
-        url = urlToOpen.toString();
-        
         // Try URL
         try {
-            new URL(url);
+        	URI uri = new URI(urlToEnter);
+        	
+        	// check if absolute or relative URL
+        	if (!uri.isAbsolute()) {
+        		URI currentLocation = new URI(this.getSelenium().getLocation());
+        		uri = currentLocation.resolve(uri);
+        	}
+            URL url = uri.toURL();
+            info("Trying to open url " + url);
+            this.start();
+            this.getSelenium().open(url.toString());
+            
+            if (!this.isAjax()) {
+            	this.getSelenium().waitForPageToLoad(this.getTimeout());
+            }
+            this.stop();
+            return null;
         } catch (MalformedURLException ex) {
+        	this.stop();
         	this.setException(ex);
-            throw new WebComponentException("Invalid URL: " + url);
-        }
-
-        info("Trying to open url " + url);
-        this.start();
-        this.getSelenium().open(url);
-        
-        if (!this.isAjax()) {
-        	this.getSelenium().waitForPageToLoad(this.getTimeout());
-        }
-        this.stop();
-        
-        return null;
+            throw new WebComponentException("Invalid URL: " + urlToEnter);
+        } catch (URISyntaxException ex) {
+        	this.stop();
+        	this.setException(ex);
+            throw new WebComponentException("Invalid URL: " + urlToEnter);
+		}
 	}
 
 }

@@ -17,16 +17,24 @@
 package org.nabucco.testautomation.engine.proxy.web.component.captcha;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Date;
+import java.util.UUID;
 
-import org.nabucco.testautomation.engine.base.util.PropertyHelper;
-import org.nabucco.testautomation.engine.proxy.web.captcha.Captcha;
+import org.apache.commons.codec.binary.Base64;
+import org.nabucco.framework.base.facade.datatype.Identifier;
+import org.nabucco.framework.base.facade.datatype.image.ImageData;
+import org.nabucco.testautomation.engine.base.util.TestResultHelper;
+import org.nabucco.testautomation.engine.proxy.cache.ImageCache;
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponentCommand;
 import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentException;
-
 import org.nabucco.testautomation.facade.datatype.property.PropertyList;
-import org.nabucco.testautomation.facade.datatype.property.StringProperty;
+import org.nabucco.testautomation.result.facade.datatype.trace.ActionTrace;
+import org.nabucco.testautomation.result.facade.datatype.trace.ScreenshotTrace;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
+
 import com.thoughtworks.selenium.Selenium;
 
 /**
@@ -36,6 +44,12 @@ import com.thoughtworks.selenium.Selenium;
  */
 public class ReadCaptchaCommand extends AbstractWebComponentCommand {
 
+	private static final String CAPTCHA_WINDOW = "CaptchaWindow";
+
+	private static final String SRC_ATTRIBUTE = "@src";
+	
+	private byte[] imageData;
+	
 	/**
 	 * @param selenium
 	 */
@@ -51,33 +65,59 @@ public class ReadCaptchaCommand extends AbstractWebComponentCommand {
 			PropertyList properties) throws WebComponentException {
 		
 		String captchaId = this.getComponentLocator(metadata);
-		StringProperty property = (StringProperty) properties.getPropertyList().get(0).getProperty().cloneObject();
 		
 		try {
-            StringBuilder location = new StringBuilder();
-
-            this.start();
             this.waitForElement(captchaId);
-            String root = this.getSelenium().getLocation();
-            String attribute = this.getSelenium().getAttribute(captchaId);
-
-            location.append(root.substring(0, root.indexOf(attribute.substring(0, 15))));
-            location.append(attribute);
-
-            URL url = new URL(location.toString());
-            Captcha captcha = new Captcha(url);
+            captchaId += SRC_ATTRIBUTE;
+            String imageLocation = this.getSelenium().getAttribute(captchaId);
+            URI uri = new URI(imageLocation);
             
-            String code = captcha.readSequence();
+            if (!uri.isAbsolute()) {
+				URI currentLocation = new URI(this.getSelenium().getLocation());
+            	uri = currentLocation.resolve(uri);
+            }
+            URL url = uri.toURL();
+            
+            this.start();
+            this.getSelenium().openWindow(url.toString(), CAPTCHA_WINDOW);
+            this.getSelenium().waitForPopUp(CAPTCHA_WINDOW, this.getTimeout());
+            this.getSelenium().selectWindow(CAPTCHA_WINDOW);
+            this.imageData = decode(this.getSelenium().captureEntirePageScreenshotToString("background=#FFFFFF"));
+            this.getSelenium().close();
+            this.getSelenium().selectWindow(null);
             this.stop();
-            property.setValue(code);
-            PropertyList returnProperties = PropertyHelper.createPropertyList(RETURN_PROPERTIES);
-            this.add(property, returnProperties);
-            return returnProperties;
-        } catch (IOException ex) {
+            return null;
+		} catch (IOException ex) {
         	this.stop();
         	this.setException(ex);
             throw new WebComponentException("Error during captcha identification: " + ex.getMessage());
-        }
+        } catch (URISyntaxException ex) {
+        	this.stop();
+        	this.setException(ex);
+            throw new WebComponentException("Error locating WebCaptcha: " + ex.getMessage());
+		}
+	}
+	
+	private byte[] decode(String encodedImage) {
+		byte[] imageData = Base64.decodeBase64(encodedImage);
+		return imageData;
+	}
+	
+	@Override
+	public ActionTrace getActionTrace() {
+		ScreenshotTrace trace = TestResultHelper.createScreenshotTrace();
+		long duration = this.getStop() - this.getStart();
+		trace.setStartTime(new Date(this.getStart()));
+		trace.setEndTime(new Date(this.getStop() > 0 ? this.getStop() : System.currentTimeMillis()));
+		trace.setDuration(duration >= 0 ? duration : System.currentTimeMillis() - this.getStart());
+		trace.setStackTrace(TestResultHelper.getStackTrace(this.getException()));
+		
+        // Put Image into Cache
+		Identifier imageId = new Identifier(UUID.randomUUID().getMostSignificantBits()); 
+		ImageData image = new ImageData(imageData);
+		ImageCache.getInstance().put(imageId, image);
+		trace.setImageId(imageId);
+		return trace;
 	}
 
 }

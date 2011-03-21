@@ -114,7 +114,12 @@ public enum WebActionType implements SubEngineActionType {
     /**
      * The ActionType to perform a doubleclick.
      */
-    DOUBLE_CLICK("Left mouse doubleclick");
+    DOUBLE_CLICK("Left mouse doubleclick"),
+    
+    /**
+     * The ActionType to check availability.
+     */
+    IS_AVAILABLE("Is Element available");
     
     private String description;
     

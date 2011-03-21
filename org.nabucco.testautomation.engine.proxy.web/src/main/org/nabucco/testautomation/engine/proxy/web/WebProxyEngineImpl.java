@@ -85,12 +85,12 @@ public class WebProxyEngineImpl extends AbstractProxyEngine {
 			int timeout = webProxyConfig.getRcServerTimeout();
 			File profileDir = webProxyConfig.getProfileDirectory();
 
-			logger.debug("Configuring with  serverPort = '" + serverPort + "'");
-			logger.debug("Configuring with  baseURL = '" + baseURL + "'");
-			logger.debug("Configuring with  browser = '" + browser + "'");
-			logger.debug("Configuring with  serverHost = '" + serverHost + "'");
-			logger.debug("Configuring with  rcServerTimeout = '" + timeout + "'");
-			logger.debug("Configuring with  profileDir = '" + profileDir + "'");
+			logger.info("Configuring with  serverPort = '" + serverPort + "'");
+			logger.info("Configuring with  baseURL = '" + baseURL + "'");
+			logger.info("Configuring with  browser = '" + browser + "'");
+			logger.info("Configuring with  serverHost = '" + serverHost + "'");
+			logger.info("Configuring with  rcServerTimeout = '" + timeout + "'");
+			logger.info("Configuring with  profileDir = '" + profileDir + "'");
 
 			remoteControlConfig = new RemoteControlConfiguration();
 			remoteControlConfig.setTimeoutInSeconds(timeout);
@@ -100,6 +100,7 @@ public class WebProxyEngineImpl extends AbstractProxyEngine {
 			if (profileDir != null) {
 				remoteControlConfig.setFirefoxProfileTemplate(profileDir);
 			}
+			logger.info("WebProxyEngine configured");
 		} catch (Exception ex) {
 			throw new ProxyConfigurationException("Could not configure WebProxyEngine", ex);
 		}
@@ -111,6 +112,7 @@ public class WebProxyEngineImpl extends AbstractProxyEngine {
 	@Override
 	public SubEngine start() throws ProxyConfigurationException {
 		try {
+			logger.info("Starting WebProxyEngine ...");
 			seleniumRCServer = new SeleniumServer(remoteControlConfig);
 			seleniumRCServer.start();
 			selenium = new DefaultSelenium(serverHost, serverPort, browser,
@@ -118,7 +120,10 @@ public class WebProxyEngineImpl extends AbstractProxyEngine {
 			selenium.start("captureNetworkTraffic=true");
 			selenium.open(baseURL);
 			selenium.windowMaximize();
-			return new WebSubEngineImpl(selenium);
+			SubEngine subEngine = null;
+			subEngine = new WebSubEngineImpl(selenium);
+			logger.info("WebSubEngine created");
+			return subEngine;
 		} catch (Exception ex) {
 			throw new ProxyConfigurationException("Could not start WebProxyEngine. Cause: " + ex.getMessage());
 		}
