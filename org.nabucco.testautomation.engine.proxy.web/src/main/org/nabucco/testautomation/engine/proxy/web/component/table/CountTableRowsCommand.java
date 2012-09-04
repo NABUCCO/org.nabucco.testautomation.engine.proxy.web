@@ -14,31 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.nabucco.testautomation.engine.proxy.web.component.javascript;
+package org.nabucco.testautomation.engine.proxy.web.component.table;
+
+import java.math.BigDecimal;
 
 import org.nabucco.testautomation.property.facade.datatype.util.PropertyHelper;
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponentCommand;
 import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentException;
+import org.nabucco.testautomation.property.facade.datatype.NumericProperty;
 import org.nabucco.testautomation.property.facade.datatype.PropertyList;
-import org.nabucco.testautomation.property.facade.datatype.TextProperty;
 import org.nabucco.testautomation.property.facade.datatype.base.PropertyType;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
 
 import com.thoughtworks.selenium.Selenium;
 
 /**
- * EvaluateJavaScriptCommand
+ * CountTableRowsCommand
  * 
- * @author Steffen Schmidt, PRODYNA AG
+ * @author Florian Schmidt, PRODYNA AG
  */
-public class EvaluateJavaScriptCommand extends AbstractWebComponentCommand {
-
-    public static final String JAVA_SCRIPT = "JAVA_SCRIPT";
+public class CountTableRowsCommand extends AbstractWebComponentCommand {
 
     /**
      * @param selenium
      */
-    public EvaluateJavaScriptCommand(Selenium selenium) {
+    public CountTableRowsCommand(Selenium selenium) {
         super(selenium);
     }
 
@@ -48,38 +48,38 @@ public class EvaluateJavaScriptCommand extends AbstractWebComponentCommand {
     @Override
     public PropertyList executeCallback(Metadata metadata, PropertyList properties) throws WebComponentException {
 
-        String javaScript = getJavaScript(metadata, properties);
-        TextProperty property = (TextProperty) properties.getPropertyList().get(0).getProperty().cloneObject();
+        String tableId = this.getComponentLocator(metadata);
+        if (tableId.startsWith("xpath")) {
+            tableId = tableId.split("=")[1];
+        } else if (tableId.startsWith("identifier")) {
+            String id = "//*[@id='" + tableId.split("=")[1] + "'][1]";
+            String name = "//*[@name='" + tableId.split("=")[1] + "'][1]";
+            if (this.getSelenium().getXpathCount(id).intValue() > 0) {
+                tableId = id;
+            } else {
+                tableId = name;
+            }
+        } else {
+            throw new WebComponentException("Component locator has to be xpath or identifier.");
+        }
 
+        // Set xpath so it selects the last row wether it is a child or grandchild of table
+        String path = "xpath=" + tableId + "/tr[last()]|" + tableId + "/tbody/tr[last()]";
         this.start();
-        String result = this.getSelenium().getEval(javaScript);
+        this.waitForElement(tableId);
+
+        Number elementIndex = this.getSelenium().getElementIndex(path);
+        // Element index starts with 0 so we add 1
+        long count = elementIndex.longValue() + 1;
+        BigDecimal number = BigDecimal.valueOf(count);
         this.stop();
 
-        property.setValue(result);
+        NumericProperty property = (NumericProperty) PropertyHelper.getFromList(properties, PropertyType.NUMERIC)
+                .cloneObject();
+        property.setValue(number);
         PropertyList returnProperties = PropertyHelper.createPropertyList(RETURN_PROPERTIES);
         this.add(property, returnProperties);
         return returnProperties;
-    }
-
-    /**
-     * @param metadata
-     * @param properties
-     * @return
-     */
-    private String getJavaScript(Metadata metadata, PropertyList properties) throws WebComponentException {
-
-        TextProperty prop = (TextProperty) PropertyHelper.getFromList(properties, PropertyType.TEXT, JAVA_SCRIPT);
-
-        if (prop != null) {
-            return prop.getValue().getValue();
-        }
-
-        prop = (TextProperty) PropertyHelper.getFromList(metadata.getPropertyList(), PropertyType.TEXT, JAVA_SCRIPT);
-
-        if (prop == null) {
-            throw new WebComponentException("No JavaScript snippet found for evaluation");
-        }
-        return prop.getValue().getValue();
     }
 
 }

@@ -1,39 +1,38 @@
 /*
-* Copyright 2010 PRODYNA AG
-*
-* Licensed under the Eclipse Public License (EPL), Version 1.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.opensource.org/licenses/eclipse-1.0.php or
-* http://www.nabucco-source.org/nabucco-license.html
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2012 PRODYNA AG
+ *
+ * Licensed under the Eclipse Public License (EPL), Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.opensource.org/licenses/eclipse-1.0.php or
+ * http://www.nabucco.org/License.html
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.nabucco.testautomation.engine.proxy.web.component;
 
 import java.util.List;
 
+import org.nabucco.framework.base.facade.datatype.logger.NabuccoLogger;
+import org.nabucco.framework.base.facade.datatype.logger.NabuccoLoggingFactory;
 import org.nabucco.testautomation.engine.base.context.TestContext;
-import org.nabucco.testautomation.engine.base.logging.NBCTestLogger;
-import org.nabucco.testautomation.engine.base.logging.NBCTestLoggingFactory;
 import org.nabucco.testautomation.engine.base.util.TestResultHelper;
 import org.nabucco.testautomation.engine.proxy.SubEngineActionType;
 import org.nabucco.testautomation.engine.proxy.web.WebActionType;
 import org.nabucco.testautomation.engine.proxy.web.WebEngineOperation;
-import org.nabucco.testautomation.engine.proxy.web.component.WebComponent;
-
-import org.nabucco.testautomation.facade.datatype.PropertyFactory;
-import org.nabucco.testautomation.facade.datatype.property.PropertyList;
-import org.nabucco.testautomation.facade.datatype.property.base.Property;
-import org.nabucco.testautomation.facade.datatype.property.base.PropertyType;
+import org.nabucco.testautomation.property.facade.datatype.util.PropertyFactory;
+import org.nabucco.testautomation.property.facade.datatype.PropertyList;
+import org.nabucco.testautomation.property.facade.datatype.base.Property;
+import org.nabucco.testautomation.property.facade.datatype.base.PropertyType;
 import org.nabucco.testautomation.result.facade.datatype.ActionResponse;
 import org.nabucco.testautomation.result.facade.datatype.status.ActionStatusType;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
+
 import com.thoughtworks.selenium.Selenium;
 
 /**
@@ -44,9 +43,8 @@ import com.thoughtworks.selenium.Selenium;
 public abstract class AbstractWebComponent implements WebComponent {
 
     private static final long serialVersionUID = 1L;
-    
-    private static final NBCTestLogger logger = NBCTestLoggingFactory
-			.getInstance().getLogger(WebComponent.class);
+
+    private static final NabuccoLogger logger = NabuccoLoggingFactory.getInstance().getLogger(WebComponent.class);
 
     private Selenium selenium;
 
@@ -66,48 +64,47 @@ public abstract class AbstractWebComponent implements WebComponent {
      * {@inheritDoc}
      */
     @Override
-    public ActionResponse execute(TestContext context, PropertyList propertyList,
-            List<Metadata> metadataList, SubEngineActionType actionType) {
+    public ActionResponse execute(TestContext context, PropertyList propertyList, List<Metadata> metadataList,
+            SubEngineActionType actionType) {
 
-    	Metadata metadata = getLeaf(metadataList);
-    	
-    	// check request-arguments
-		if (propertyList == null) {
-			propertyList = (PropertyList) PropertyFactory.getInstance()
-					.produceProperty(PropertyType.LIST);
-		}
+        Metadata metadata = getLeaf(metadataList);
 
-    	try {
-    		validateArguments(context, propertyList, metadataList, actionType);
-    		validateProperties(propertyList, (WebActionType) actionType);
+        // check request-arguments
+        if (propertyList == null) {
+            propertyList = (PropertyList) PropertyFactory.getInstance().produceProperty(PropertyType.LIST);
+        }
+
+        try {
+            validateArguments(context, propertyList, metadataList, actionType);
+            validateProperties(propertyList, (WebActionType) actionType);
             return internalExecute(context, propertyList, metadata, (WebActionType) actionType);
         } catch (IllegalArgumentException ex) {
-        	logger.error(ex.getMessage());
-        	return failResult(metadata, actionType, ex.getMessage());
+            logger.error(ex.getMessage());
+            return failResult(metadata, actionType, ex.getMessage());
         } catch (Exception ex) {
             logger.error(ex, "Error executing WebComponent " + metadata.getName().getValue());
             return failResult(metadata, actionType, ex.getMessage());
         }
     }
-    
+
     protected Selenium getSelenium() {
-    	return this.selenium;
+        return this.selenium;
     }
-    
+
     protected void info(String message) {
-    	logger.info(message);
+        logger.info(message);
     }
-    
+
     protected void debug(String message) {
-    	logger.debug(message);
+        logger.debug(message);
     }
-    
+
     protected void error(String message) {
-    	logger.error(message);
-    }   
-    
+        logger.error(message);
+    }
+
     protected void fatal(Exception ex) {
-    	logger.fatal(ex);
+        logger.fatal(ex);
     }
 
     /**
@@ -118,7 +115,7 @@ public abstract class AbstractWebComponent implements WebComponent {
      */
     protected abstract ActionResponse internalExecute(TestContext context, PropertyList propertyList,
             Metadata metadata, WebActionType actionType);
-    
+
     /**
      * 
      * @param propertyList
@@ -138,8 +135,8 @@ public abstract class AbstractWebComponent implements WebComponent {
      * @param actionType
      *            the action type
      */
-    private void validateArguments(TestContext context, PropertyList propertyList,
-            List<Metadata> metadataList, SubEngineActionType actionType) {
+    private void validateArguments(TestContext context, PropertyList propertyList, List<Metadata> metadataList,
+            SubEngineActionType actionType) {
 
         if (context == null) {
             throw new IllegalArgumentException("TestContext must not be null.");
@@ -171,10 +168,10 @@ public abstract class AbstractWebComponent implements WebComponent {
      * @return the leaf element to work with
      */
     private Metadata getLeaf(List<Metadata> metadataList) {
-    	
-    	if (metadataList.isEmpty()) {
-    		throw new IllegalArgumentException("No Metadata defined");
-    	}
+
+        if (metadataList.isEmpty()) {
+            throw new IllegalArgumentException("No Metadata defined");
+        }
         Metadata metadata = metadataList.get(metadataList.size() - 1);
         return metadata;
     }
@@ -197,12 +194,10 @@ public abstract class AbstractWebComponent implements WebComponent {
             throw new IllegalArgumentException(msg);
         }
 
-        Property result = context.getProperty(scriptProperty.getName().getValue());
+        Property result = context.getProperty(scriptProperty.getName());
 
         if (result == null) {
-            String msg = "Property with id "
-                    + scriptProperty.getId()
-                    + " cannot be found in given TestContext.";
+            String msg = "Property with id " + scriptProperty.getId() + " cannot be found in given TestContext.";
             logger.error(msg);
             throw new IllegalArgumentException(msg);
         }
@@ -220,12 +215,12 @@ public abstract class AbstractWebComponent implements WebComponent {
      * 
      * @return the failed result
      */
-    protected ActionResponse failResult(Metadata metadata,
-            SubEngineActionType actionType, String errorMessage) {
+    protected ActionResponse failResult(Metadata metadata, SubEngineActionType actionType, String errorMessage) {
 
         StringBuilder message = new StringBuilder();
         message.append("Error executing operation on ");
-        message.append(metadata != null && metadata.getOperation() != null ? metadata.getOperation().getName().getValue() : "n/a");
+        message.append(metadata != null && metadata.getOperation() != null ? metadata.getOperation().getName()
+                .getValue() : "n/a");
         message.append(" with name='");
         message.append(metadata != null && metadata.getName() != null ? metadata.getName().getValue() : "n/a");
         message.append("' and action='");

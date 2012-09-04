@@ -1,29 +1,29 @@
 /*
-* Copyright 2010 PRODYNA AG
-*
-* Licensed under the Eclipse Public License (EPL), Version 1.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.opensource.org/licenses/eclipse-1.0.php or
-* http://www.nabucco-source.org/nabucco-license.html
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2012 PRODYNA AG
+ *
+ * Licensed under the Eclipse Public License (EPL), Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.opensource.org/licenses/eclipse-1.0.php or
+ * http://www.nabucco.org/License.html
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.nabucco.testautomation.engine.proxy.web.component.element;
 
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponentCommand;
 import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentException;
-import org.nabucco.testautomation.facade.datatype.property.BooleanProperty;
-import org.nabucco.testautomation.facade.datatype.property.IntegerProperty;
-import org.nabucco.testautomation.facade.datatype.property.PropertyList;
-import org.nabucco.testautomation.facade.datatype.property.StringProperty;
-import org.nabucco.testautomation.facade.datatype.property.base.Property;
-import org.nabucco.testautomation.facade.datatype.property.base.PropertyContainer;
+import org.nabucco.testautomation.property.facade.datatype.BooleanProperty;
+import org.nabucco.testautomation.property.facade.datatype.NumericProperty;
+import org.nabucco.testautomation.property.facade.datatype.PropertyList;
+import org.nabucco.testautomation.property.facade.datatype.TextProperty;
+import org.nabucco.testautomation.property.facade.datatype.base.Property;
+import org.nabucco.testautomation.property.facade.datatype.base.PropertyContainer;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
 
 import com.thoughtworks.selenium.Selenium;
@@ -33,89 +33,88 @@ import com.thoughtworks.selenium.Selenium;
  * 
  * @author Steffen Schmidt, PRODYNA AG
  */
-public class PressKeyCommand extends AbstractWebComponentCommand {
+class PressKeyCommand extends AbstractWebComponentCommand {
 
-	/**
-	 * @param selenium
-	 */
-	public PressKeyCommand(Selenium selenium) {
-		super(selenium);
-	}
+    /**
+     * @param selenium
+     */
+    public PressKeyCommand(Selenium selenium) {
+        super(selenium);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public PropertyList executeCallback(Metadata metadata,
-			PropertyList properties) throws WebComponentException {
-		
-		String element = this.getComponentLocator(metadata);
-		String key = EMPTY_STRING;
-		boolean ctrl = false;
-		boolean shift = false;
-		boolean alt = false;
-		
-		for (PropertyContainer container : properties.getPropertyList()) {
-			Property property = container.getProperty();
-	    	
-			switch (property.getType()) {
-	    	
-	    	case STRING:
-	    		key = ((StringProperty) property).getValue().getValue();
-	    		break;
-	    		
-	    	case INTEGER:
-	    		key = "\\" + ((IntegerProperty) property).getValue().getValue();
-	    		break;
-	    		
-	    	case BOOLEAN:
-	    		BooleanProperty prop = (BooleanProperty) property;
-	    		
-	    		if (prop.getValue() != null && prop.getValue().getValue() != null) {
-	    		
-		    		if (prop.getName().getValue().equals(CTRL)) {
-		    			ctrl = prop.getValue().getValue();
-		    		} else if (prop.getName().getValue().equals(SHIFT)) {
-		    			shift = prop.getValue().getValue();
-		    		} else if (prop.getName().getValue().equals(ALT)) {
-		    			alt = prop.getValue().getValue();
-		    		}
-	    		}
-	    		break;
-	    	}
-		}
-    	
-    	this.start();
-    	this.waitForElement(element);
-    	
-    	if (ctrl) {
-    		this.getSelenium().controlKeyDown();
-    	}
-    	
-    	if (shift) {
-    		this.getSelenium().shiftKeyDown();
-    	}
-    	
-    	if (alt) {
-    		this.getSelenium().altKeyDown();
-    	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PropertyList executeCallback(Metadata metadata, PropertyList properties) throws WebComponentException {
 
-    	this.getSelenium().keyPress(element, key);
-		
-    	if (ctrl) {
-    		this.getSelenium().controlKeyUp();
-    	}
-    	
-    	if (shift) {
-    		this.getSelenium().shiftKeyUp();
-    	}
-    	
-    	if (alt) {
-    		this.getSelenium().altKeyUp();
-    	}
-    	
+        String element = this.getComponentLocator(metadata);
+        String key = EMPTY_STRING;
+        boolean ctrl = false;
+        boolean shift = false;
+        boolean alt = false;
+
+        for (PropertyContainer container : properties.getPropertyList()) {
+            Property property = container.getProperty();
+
+            switch (property.getType()) {
+
+            case TEXT:
+                key = ((TextProperty) property).getValue().getValue();
+                break;
+
+            case NUMERIC:
+                key = "\\" + ((NumericProperty) property).getValue().getValue().intValue();
+                break;
+
+            case BOOLEAN:
+                BooleanProperty prop = (BooleanProperty) property;
+
+                if (prop.getValue() != null && prop.getValue().getValue() != null) {
+
+                    if (prop.getName().getValue().equals(CTRL)) {
+                        ctrl = prop.getValue().getValue();
+                    } else if (prop.getName().getValue().equals(SHIFT)) {
+                        shift = prop.getValue().getValue();
+                    } else if (prop.getName().getValue().equals(ALT)) {
+                        alt = prop.getValue().getValue();
+                    }
+                }
+                break;
+            }
+        }
+
+        this.start();
+        this.waitForElement(element);
+
+        if (ctrl) {
+            this.getSelenium().controlKeyDown();
+        }
+
+        if (shift) {
+            this.getSelenium().shiftKeyDown();
+        }
+
+        if (alt) {
+            this.getSelenium().altKeyDown();
+        }
+
+        this.getSelenium().keyPress(element, key);
+
+        if (ctrl) {
+            this.getSelenium().controlKeyUp();
+        }
+
+        if (shift) {
+            this.getSelenium().shiftKeyUp();
+        }
+
+        if (alt) {
+            this.getSelenium().altKeyUp();
+        }
+
         this.stop();
         return null;
-	}
+    }
 
 }

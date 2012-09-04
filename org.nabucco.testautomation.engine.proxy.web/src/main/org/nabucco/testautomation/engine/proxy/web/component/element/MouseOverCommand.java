@@ -14,49 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.nabucco.testautomation.engine.proxy.web.component.webpage;
+package org.nabucco.testautomation.engine.proxy.web.component.element;
 
-import org.nabucco.testautomation.property.facade.datatype.util.PropertyHelper;
 import org.nabucco.testautomation.engine.proxy.web.component.AbstractWebComponentCommand;
 import org.nabucco.testautomation.engine.proxy.web.exception.WebComponentException;
 import org.nabucco.testautomation.property.facade.datatype.PropertyList;
-import org.nabucco.testautomation.property.facade.datatype.TextProperty;
 import org.nabucco.testautomation.script.facade.datatype.metadata.Metadata;
 
 import com.thoughtworks.selenium.Selenium;
 
 /**
- * ReadWebPageCommand
+ * MouseOverCommand
  * 
- * @author Steffen Schmidt, PRODYNA AG
+ * @author Nicolas Moser, PRODYNA AG
  */
-public class ReadWebPageCommand extends AbstractWebComponentCommand {
+class MouseOverCommand extends AbstractWebComponentCommand {
 
     /**
+     * Creates a new {@link MouseOverCommand} instance.
+     * 
      * @param selenium
+     *            the selenium instance
      */
-    protected ReadWebPageCommand(Selenium selenium) {
+    protected MouseOverCommand(Selenium selenium) {
         super(selenium);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PropertyList executeCallback(Metadata metadata, PropertyList properties) throws WebComponentException {
 
-        TextProperty property = (TextProperty) properties.getPropertyList().get(0).getProperty().cloneObject();
-        String identifier = this.getComponentLocator(metadata);
+        String element = super.getComponentLocator(metadata);
 
         this.start();
-        this.waitForElement(identifier);
-        String text = this.getSelenium().getText(identifier);
+        this.waitForElement(element);
+        this.getSelenium().mouseOver(element);
         this.stop();
 
-        property.setValue(text);
-        PropertyList returnProperties = PropertyHelper.createPropertyList(RETURN_PROPERTIES);
-        this.add(property, returnProperties);
-        return returnProperties;
+        return null;
     }
 
 }
